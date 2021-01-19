@@ -36,16 +36,22 @@ app.get('/urls', (req, res) => {
 
 // POST handler for new URL form submission
 app.post('/urls', (req, res) => {
-  console.log(req.body);
   const randomStr = generateRandomString();
   urlDatabase[randomStr] = req.body.longURL;
-  console.log(urlDatabase);
+  console.log('new URL added');
   res.redirect(`/urls/${randomStr}`);
 });
 
 // GET handler for 'Create New URL' page
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+});
+
+// POST handler for URL deletions
+app.post('/urls/:shortURL/delete', (req, res) => {
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect('/urls/');
 });
 
 // GET handler for shortURLs (using express route parameters)
