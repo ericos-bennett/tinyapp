@@ -60,6 +60,14 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// POST hanlder for URL edits
+app.post('/urls/:shortURL', (req, res) => {
+  const newURL = req.body.newURL;
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL] = newURL;
+  res.redirect(`/urls/${shortURL}`);
+});
+
 // GET handler for shortURL redirects
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
