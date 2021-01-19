@@ -13,6 +13,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// Function to generate a new shortURL string
+const generateRandomString = () => {
+  const chars = '01234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
+  let randomStr = '';
+  for (let i = 0; i < 6; i++) {
+    randomStr += chars[Math.floor(Math.random() * 63)];
+  }
+  return randomStr;
+};
+
 // GET handler for index page
 app.get("/", (req, res) => {
   res.send("Hello!");
