@@ -37,7 +37,10 @@ app.get('/urls', (req, res) => {
 // POST handler for new URL form submission
 app.post('/urls', (req, res) => {
   console.log(req.body);
-  res.end(JSON.stringify(req.body));
+  const randomStr = generateRandomString();
+  urlDatabase[randomStr] = req.body.longURL;
+  console.log(urlDatabase);
+  res.redirect(`/urls/${randomStr}`);
 });
 
 // GET handler for 'Create New URL' page
@@ -50,6 +53,12 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
+
+// GET handler for shortURL reroutes
+app.get('/u/:shortURL', (res, req) => {
+  res.redirect(urlDatabase[req.params.shortURL]);
+});
+
 
 // Initialize listener
 app.listen(PORT, () => {
