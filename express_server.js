@@ -54,11 +54,11 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// GET handler for shortURL reroutes
-app.get('/u/:shortURL', (res, req) => {
-  res.redirect(urlDatabase[req.params.shortURL]);
+// GET handler for shortURL redirects
+app.get('/u/:shortURL', (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
-
 
 // Initialize listener
 app.listen(PORT, () => {
