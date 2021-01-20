@@ -13,12 +13,12 @@
       <% if (user) { %>
         <div style="margin:0.5em 1em">Signed in as: <%= user.email %></div>
         <form class="form-inline" method="POST" action="/logout">
-          <button class="btn btn-primary">Log Out</button>
+          <button class="btn btn-outline-dark">Log Out</button>
         </form>
       <% } else { %>
         <div class="navbar-nav">
-          <a class="nav-item nav-link" href="/register">Register</a>
           <a class="nav-item nav-link" href="/login">Login</a>
+          <a class="nav-item nav-link" href="/register">Register</a>
         </div>
       <% } %>
       </div>
