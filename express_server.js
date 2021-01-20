@@ -10,10 +10,23 @@ app.use(cookieParser());
 
 app.set('view engine', 'ejs');
 
-// Initialize the dummy database variale
+// Initialize the dummy database variables
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const users = {
+  "LmjMRm": {
+    id: "LmjMRm",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "322Wyk": {
+    id: "322Wyk",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
 };
 
 // Function to generate a new shortURL string
@@ -85,11 +98,25 @@ app.post('/urls/:shortURL', (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// GET handler for /register
+// GET handler for the registration page
 app.get('/register', (req, res) => {
   const username = req.cookies ? req.cookies['username'] : null;
   const templateVars = { username };
   res.render('register', templateVars);
+});
+
+// POST handler for user registration
+app.post('/register', (req, res) => {
+  console.log(req.body);
+  const newUserId = generateRandomString();
+  users[newUserId] = {
+    id: newUserId,
+    email: req.body.email,
+    password: req.body.password
+  };
+  res.cookie('user_id', newUserId);
+  console.log(users);
+  res.redirect('/urls');
 });
 
 // GET handler for shortURL redirects
