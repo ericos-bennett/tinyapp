@@ -1,10 +1,13 @@
 const express = require("express");
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = 8080; // default port 8080 (works with vagrant rerouting)
 
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
+
 app.set('view engine', 'ejs');
 
 // Initialize the dummy database variale
@@ -26,7 +29,8 @@ const generateRandomString = () => {
 
 // GET handler for the main URLs page (dynamically rendered with EJS)
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const username = req.cookies ? req.cookies['username'] : null;
+  const templateVars = { urls: urlDatabase, username };
   res.render('urls_index', templateVars);
 });
 
@@ -45,9 +49,18 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
+// POST handler for a logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
+
 // GET handler for 'Create New URL' page
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const username = req.cookies ? req.cookies['username'] : null;
+  const templateVars = { username };
+  res.render("urls_new", templateVars);
 });
 
 // POST handler for URL deletions
@@ -59,7 +72,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 // GET handler for shortURLs (using express route parameters)
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const username = req.cookies ? req.cookies['username'] : null;
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username };
   res.render("urls_show", templateVars);
 });
 
