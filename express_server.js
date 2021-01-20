@@ -23,10 +23,6 @@ const generateRandomString = () => {
   return randomStr;
 };
 
-// GET handler for index page
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
 
 // GET handler for the main URLs page (dynamically rendered with EJS)
 app.get('/urls', (req, res) => {
@@ -40,6 +36,13 @@ app.post('/urls', (req, res) => {
   urlDatabase[randomStr] = req.body.longURL;
   console.log('new URL added');
   res.redirect(`/urls/${randomStr}`);
+});
+
+// POST handler for a login
+app.post('/login', (req, res) => {
+  const username = req.body.username;
+  res.cookie('username', username);
+  res.redirect('/urls');
 });
 
 // GET handler for 'Create New URL' page
