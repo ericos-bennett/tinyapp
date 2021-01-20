@@ -67,7 +67,7 @@ app.get("/urls/new", (req, res) => {
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
-  res.redirect('/urls/');
+  res.redirect('/urls');
 });
 
 // GET handler for shortURLs (using express route parameters)
@@ -83,6 +83,13 @@ app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = newURL;
   res.redirect(`/urls/${shortURL}`);
+});
+
+// GET handler for /register
+app.get('/register', (req, res) => {
+  const username = req.cookies ? req.cookies['username'] : null;
+  const templateVars = { username };
+  res.render('register', templateVars);
 });
 
 // GET handler for shortURL redirects
