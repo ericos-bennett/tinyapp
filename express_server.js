@@ -39,11 +39,17 @@ const generateRandomString = () => {
   return randomStr;
 };
 
+// Function to retrieve a user object given their email
+const findUserByEmail = (email) => {
+  for (let user in users) {
+    if (users[user]['email'] === email) return users[user];
+  }
+};
 
 // GET handler for the main URLs page (dynamically rendered with EJS)
 app.get('/urls', (req, res) => {
-  const username = req.cookies ? req.cookies['username'] : null;
-  const templateVars = { urls: urlDatabase, username };
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
+  const templateVars = { urlDatabase, user };
   res.render('urls_index', templateVars);
 });
 
@@ -51,28 +57,28 @@ app.get('/urls', (req, res) => {
 app.post('/urls', (req, res) => {
   const randomStr = generateRandomString();
   urlDatabase[randomStr] = req.body.longURL;
-  console.log('new URL added');
   res.redirect(`/urls/${randomStr}`);
 });
 
 // POST handler for a login
 app.post('/login', (req, res) => {
-  const username = req.body.username;
-  res.cookie('username', username);
+  const email = req.body.email;
+  const user = findUserByEmail(email);
+  if (user) res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
 
 // POST handler for a logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
 
 // GET handler for 'Create New URL' page
 app.get("/urls/new", (req, res) => {
-  const username = req.cookies ? req.cookies['username'] : null;
-  const templateVars = { username };
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
+  const templateVars = { user };
   res.render("urls_new", templateVars);
 });
 
@@ -85,8 +91,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 // GET handler for shortURLs (using express route parameters)
 app.get("/urls/:shortURL", (req, res) => {
-  const username = req.cookies ? req.cookies['username'] : null;
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username };
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user };
   res.render("urls_show", templateVars);
 });
 
@@ -100,14 +106,13 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // GET handler for the registration page
 app.get('/register', (req, res) => {
-  const username = req.cookies ? req.cookies['username'] : null;
-  const templateVars = { username };
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
+  const templateVars = { user };
   res.render('register', templateVars);
 });
 
 // POST handler for user registration
 app.post('/register', (req, res) => {
-  console.log(req.body);
   const newUserId = generateRandomString();
   users[newUserId] = {
     id: newUserId,
@@ -115,7 +120,6 @@ app.post('/register', (req, res) => {
     password: req.body.password
   };
   res.cookie('user_id', newUserId);
-  console.log(users);
   res.redirect('/urls');
 });
 
