@@ -23,10 +23,10 @@
         </tr>
       </thead>
       <tbody>
-        <% for(let url in urls) { %>
+        <% for(let url in urlDatabase) { %>
           <tr>
             <td><%= url %></td>
-            <td><%= urls[url] %></td>
+            <td><%= urlDatabase[url] %></td>
             <td>
               <form method="GET" action="/urls/<%= url %>">
                 <button class="btn btn-primary">EDIT</button>
