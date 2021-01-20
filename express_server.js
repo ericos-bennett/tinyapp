@@ -60,13 +60,26 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${randomStr}`);
 });
 
+// GET handler for the login page
+app.get('/login', (req, res) => {
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
+  const templateVars = { user };
+  res.render('login', templateVars);
+});
+
 // POST handler for a login
 app.post('/login', (req, res) => {
   const email = req.body.email;
+  const password = req.body.password;
   const user = findUserByEmail(email);
-  // login error handling (user must already exist)
-  if (user) res.cookie('user_id', user.id);
-  res.redirect('/urls');
+  // login error handling and authorization
+  if (user && user.email === email && user.password === password) {
+    res.cookie('user_id', user.id);
+    res.redirect('/urls');
+  } else {
+    res.statusCode = '400';
+    res.send('400 Bad Request');
+  }
 });
 
 // POST handler for a logout
@@ -128,7 +141,6 @@ app.post('/register', (req, res) => {
     res.statusCode = '400';
     res.send('400 Bad Request');
   }
-
 });
 
 // GET handler for shortURL redirects
