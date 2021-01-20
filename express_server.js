@@ -73,12 +73,12 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   const user = findUserByEmail(email);
   // login error handling and authorization
-  if (user && user.email === email && user.password === password) {
+  if (user && user.password === password) {
     res.cookie('user_id', user.id);
     res.redirect('/urls');
   } else {
-    res.statusCode = '400';
-    res.send('400 Bad Request');
+    res.statusCode = '403';
+    res.send('403 Forbidden');
   }
 });
 
