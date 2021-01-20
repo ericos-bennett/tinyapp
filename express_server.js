@@ -64,6 +64,7 @@ app.post('/urls', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const user = findUserByEmail(email);
+  // login error handling (user must already exist)
   if (user) res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
@@ -113,14 +114,21 @@ app.get('/register', (req, res) => {
 
 // POST handler for user registration
 app.post('/register', (req, res) => {
-  const newUserId = generateRandomString();
-  users[newUserId] = {
-    id: newUserId,
-    email: req.body.email,
-    password: req.body.password
-  };
-  res.cookie('user_id', newUserId);
-  res.redirect('/urls');
+  // Registration error handling
+  if (req.body.email && req.body.password && !findUserByEmail(req.body.email)) {
+    const newUserId = generateRandomString();
+    users[newUserId] = {
+      id: newUserId,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.cookie('user_id', newUserId);
+    res.redirect('/urls');
+  } else {
+    res.statusCode = '400';
+    res.send('400 Bad Request');
+  }
+
 });
 
 // GET handler for shortURL redirects
