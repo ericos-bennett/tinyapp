@@ -5,13 +5,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = 8080; // default port 8080 (works with vagrant rerouting)
 
-// Middleware config
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 app.set('view engine', 'ejs');
 
 app.listen(PORT, () => {
@@ -150,7 +151,8 @@ app.post('/register', (req, res) => {
   // Registration error handling
   if (email && password && !findUserByEmail(email)) {
     const newUserId = generateRandomString();
-    users[newUserId] = { id: newUserId, email, password };
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    users[newUserId] = { id: newUserId, email, password: hashedPassword };
     res.cookie('user_id', newUserId);
     res.redirect('/urls');
   } else {
@@ -165,7 +167,7 @@ app.post('/login', (req, res) => {
   const password = req.body.password;
   const user = findUserByEmail(email);
   // login error handling and authorization
-  if (user && user.password === password) {
+  if (user && bcrypt.compareSync(password, user.password)) {
     res.cookie('user_id', user.id);
     res.redirect('/urls');
   } else {
