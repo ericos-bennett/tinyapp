@@ -4,14 +4,19 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = 8080; // default port 8080 (works with vagrant rerouting)
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(
+  cookieSession({
+    name: 'session',
+    secret: 'this is not the secret you are looking for',
+  })
+);
 
 app.set('view engine', 'ejs');
 
@@ -69,11 +74,6 @@ const findUserByEmail = email => {
   }
 };
 
-// Finds a user object given their request cookie
-const findUserByCookies = cookies => {
-  return cookies ? users[cookies['user_id']] : null;
-};
-
 // Retrieves all url objects that were made by a given user
 const getUserUrls = id => {
   let userUrls = {};
@@ -89,36 +89,37 @@ const getUserUrls = id => {
 
 // GET handler for the main URLs page
 app.get('/urls', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const filteredUrlDatabase = user ? getUserUrls(user.id) : null;
   const templateVars = { filteredUrlDatabase, user };
   res.render('urls_index', templateVars);
+  console.log(user);
 });
 
 // GET handler for 'Create New URL' page
 app.get('/urls/new', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const templateVars = { user };
   user ? res.render('urls_new', templateVars) : res.redirect('/login');
 });
 
 // GET handler for the login page
 app.get('/login', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const templateVars = { user };
   res.render('login', templateVars);
 });
 
 // GET handler for the registration page
 app.get('/register', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const templateVars = { user };
   res.render('register', templateVars);
 });
 
 // GET handler for shortURL edit pages
 app.get('/urls/:shortURL', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const shortURL = req.params.shortURL;
   if (user && getUserUrls(user.id)[shortURL]) {
     const templateVars = {
@@ -153,7 +154,7 @@ app.post('/register', (req, res) => {
     const newUserId = generateRandomString();
     const hashedPassword = bcrypt.hashSync(password, 10);
     users[newUserId] = { id: newUserId, email, password: hashedPassword };
-    res.cookie('user_id', newUserId);
+    req.session.userId = newUserId;
     res.redirect('/urls');
   } else {
     res.statusCode = '400';
@@ -168,7 +169,7 @@ app.post('/login', (req, res) => {
   const user = findUserByEmail(email);
   // login error handling and authorization
   if (user && bcrypt.compareSync(password, user.password)) {
-    res.cookie('user_id', user.id);
+    req.session.userId = user.id;
     res.redirect('/urls');
   } else {
     res.statusCode = '403';
@@ -178,13 +179,13 @@ app.post('/login', (req, res) => {
 
 // POST handler for logouts
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 });
 
 // POST handler for URL creations
 app.post('/urls', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const randomStr = generateRandomString();
   urlDatabase[randomStr] = { longURL: req.body.longURL, userID: user.id };
   res.redirect(`/urls/${randomStr}`);
@@ -192,7 +193,7 @@ app.post('/urls', (req, res) => {
 
 // POST hanlder for URL edits
 app.post('/urls/:shortURL', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const shortURL = req.params.shortURL;
   if (user && getUserUrls(user.id)[shortURL]) {
     const newURL = req.body.newURL;
@@ -205,7 +206,7 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // POST handler for URL deletions
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const user = findUserByCookies(req.cookies);
+  const user = users[req.session.userId];
   const shortURL = req.params.shortURL;
   if (user && getUserUrls(user.id)[shortURL]) {
     delete urlDatabase[shortURL];
