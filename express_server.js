@@ -93,7 +93,7 @@ app.post('/logout', (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = req.cookies ? users[req.cookies['user_id']] : null;
   const templateVars = { user };
-  res.render("urls_new", templateVars);
+  user ? res.render("urls_new", templateVars) : res.redirect('/login');
 });
 
 // POST handler for URL deletions
@@ -151,5 +151,5 @@ app.get('/u/:shortURL', (req, res) => {
 
 // Initialize listener
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
