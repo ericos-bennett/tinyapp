@@ -6,6 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const helpers = require('./helpers');
 
 const app = express();
 const PORT = 8080; // default port 8080 (works with vagrant rerouting)
@@ -39,7 +40,7 @@ const urlDatabase = {
   },
 };
 
-const users = {
+const userDatabase = {
   LmjMRm: {
     id: 'LmjMRm',
     email: 'user@example.com',
@@ -52,45 +53,16 @@ const users = {
   },
 };
 
-/*--------------------
--- GLOBAL FUNCTIONS --
---------------------*/
-
-// Generates a random key for usernames or shortURLs
-const generateRandomString = () => {
-  const chars =
-    '01234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
-  let randomStr = '';
-  for (let i = 0; i < 6; i++) {
-    randomStr += chars[Math.floor(Math.random() * 63)];
-  }
-  return randomStr;
-};
-
-// Retrieves a user object given their email
-const findUserByEmail = email => {
-  for (let user in users) {
-    if (users[user]['email'] === email) return users[user];
-  }
-};
-
-// Retrieves all url objects that were made by a given user
-const getUserUrls = id => {
-  let userUrls = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url]['userID'] === id) userUrls[url] = urlDatabase[url];
-  }
-  return userUrls;
-};
-
 /*------------------
 -- ROUTE HANDLERS --
 ------------------*/
 
 // GET handler for the main URLs page
 app.get('/urls', (req, res) => {
-  const user = users[req.session.userId];
-  const filteredUrlDatabase = user ? getUserUrls(user.id) : null;
+  const user = userDatabase[req.session.userId];
+  const filteredUrlDatabase = user
+    ? helpers.getUserUrls(user.id, urlDatabase)
+    : null;
   const templateVars = { filteredUrlDatabase, user };
   res.render('urls_index', templateVars);
   console.log(user);
@@ -98,30 +70,30 @@ app.get('/urls', (req, res) => {
 
 // GET handler for 'Create New URL' page
 app.get('/urls/new', (req, res) => {
-  const user = users[req.session.userId];
+  const user = userDatabase[req.session.userId];
   const templateVars = { user };
   user ? res.render('urls_new', templateVars) : res.redirect('/login');
 });
 
 // GET handler for the login page
 app.get('/login', (req, res) => {
-  const user = users[req.session.userId];
+  const user = userDatabase[req.session.userId];
   const templateVars = { user };
   res.render('login', templateVars);
 });
 
 // GET handler for the registration page
 app.get('/register', (req, res) => {
-  const user = users[req.session.userId];
+  const user = userDatabase[req.session.userId];
   const templateVars = { user };
   res.render('register', templateVars);
 });
 
 // GET handler for shortURL edit pages
 app.get('/urls/:shortURL', (req, res) => {
-  const user = users[req.session.userId];
+  const user = userDatabase[req.session.userId];
   const shortURL = req.params.shortURL;
-  if (user && getUserUrls(user.id)[shortURL]) {
+  if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     const templateVars = {
       user,
       shortURL,
@@ -150,10 +122,14 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   // Registration error handling
-  if (email && password && !findUserByEmail(email)) {
-    const newUserId = generateRandomString();
+  if (email && password && !helpers.findUserByEmail(email, userDatabase)) {
+    const newUserId = helpers.makeNewKey();
     const hashedPassword = bcrypt.hashSync(password, 10);
-    users[newUserId] = { id: newUserId, email, password: hashedPassword };
+    userDatabase[newUserId] = {
+      id: newUserId,
+      email,
+      password: hashedPassword,
+    };
     req.session.userId = newUserId;
     res.redirect('/urls');
   } else {
@@ -166,7 +142,7 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = findUserByEmail(email);
+  const user = helpers.findUserByEmail(email, userDatabase);
   // login error handling and authorization
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.userId = user.id;
@@ -185,17 +161,17 @@ app.post('/logout', (req, res) => {
 
 // POST handler for URL creations
 app.post('/urls', (req, res) => {
-  const user = users[req.session.userId];
-  const randomStr = generateRandomString();
+  const user = userDatabase[req.session.userId];
+  const randomStr = helpers.makeNewKey();
   urlDatabase[randomStr] = { longURL: req.body.longURL, userID: user.id };
   res.redirect(`/urls/${randomStr}`);
 });
 
 // POST hanlder for URL edits
 app.post('/urls/:shortURL', (req, res) => {
-  const user = users[req.session.userId];
+  const user = userDatabase[req.session.userId];
   const shortURL = req.params.shortURL;
-  if (user && getUserUrls(user.id)[shortURL]) {
+  if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     const newURL = req.body.newURL;
     urlDatabase[shortURL]['longURL'] = newURL;
     res.redirect(`/urls/${shortURL}`);
@@ -206,9 +182,9 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // POST handler for URL deletions
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const user = users[req.session.userId];
+  const user = userDatabase[req.session.userId];
   const shortURL = req.params.shortURL;
-  if (user && getUserUrls(user.id)[shortURL]) {
+  if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     delete urlDatabase[shortURL];
     res.redirect('/urls');
   } else {
