@@ -126,8 +126,17 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // GET handler for shortURLs (using express route parameters)
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.cookies ? users[req.cookies['user_id']] : null;
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], user };
-  res.render("urls_show", templateVars);
+  const shortURL = req.params.shortURL;
+  if (user && urlsForUser(user.id)[shortURL]) {
+    const templateVars = {
+      user,
+      shortURL,
+      longURL: urlDatabase[req.params.shortURL]['longURL'],
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
+  }
 });
 
 // POST hanlder for URL edits
