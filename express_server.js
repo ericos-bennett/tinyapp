@@ -118,9 +118,14 @@ app.get("/urls/new", (req, res) => {
 
 // POST handler for URL deletions
 app.post('/urls/:shortURL/delete', (req, res) => {
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect('/urls');
+  if (user && urlsForUser(user.id)[shortURL]) {
+    delete urlDatabase[shortURL];
+    res.redirect('/urls');
+  } else {
+    res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
+  }
 });
 
 // GET handler for shortURLs (using express route parameters)
@@ -141,10 +146,15 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // POST hanlder for URL edits
 app.post('/urls/:shortURL', (req, res) => {
-  const newURL = req.body.newURL;
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL]['longURL'] = newURL;
-  res.redirect(`/urls/${shortURL}`);
+  if (user && urlsForUser(user.id)[shortURL]) {
+    const newURL = req.body.newURL;
+    urlDatabase[shortURL]['longURL'] = newURL;
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
+  }
 });
 
 // GET handler for the registration page
