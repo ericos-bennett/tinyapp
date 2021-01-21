@@ -61,8 +61,10 @@ app.get('/urls', (req, res) => {
 
 // POST handler for new URL form submission
 app.post('/urls', (req, res) => {
+  const user = req.cookies ? users[req.cookies['user_id']] : null;
   const randomStr = generateRandomString();
-  urlDatabase[randomStr] = { longURL: req.body.longURL, userID: null };
+  urlDatabase[randomStr] = { longURL: req.body.longURL, userID: user.id };
+  console.log(urlDatabase);
   res.redirect(`/urls/${randomStr}`);
 });
 
