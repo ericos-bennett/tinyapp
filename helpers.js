@@ -10,7 +10,7 @@ const makeNewKey = () => {
 };
 
 // Retrieves a user object given their email
-const findUserByEmail = (email, users) => {
+const getUserByEmail = (email, users) => {
   for (let user in users) {
     if (users[user]['email'] === email) return users[user];
   }
@@ -27,6 +27,6 @@ const getUserUrls = (id, urls) => {
 
 module.exports = {
   makeNewKey,
-  findUserByEmail,
+  getUserByEmail,
   getUserUrls,
 };

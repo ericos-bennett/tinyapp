@@ -122,7 +122,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   // Registration error handling
-  if (email && password && !helpers.findUserByEmail(email, userDatabase)) {
+  if (email && password && !helpers.getUserByEmail(email, userDatabase)) {
     const newUserId = helpers.makeNewKey();
     const hashedPassword = bcrypt.hashSync(password, 10);
     userDatabase[newUserId] = {
@@ -142,7 +142,7 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = helpers.findUserByEmail(email, userDatabase);
+  const user = helpers.getUserByEmail(email, userDatabase);
   // login error handling and authorization
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.userId = user.id;
