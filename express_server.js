@@ -52,10 +52,22 @@ const findUserByEmail = (email) => {
   }
 };
 
+// Function to retrieve all users that were made by a given user
+const urlsForUser = (id) => {
+  let userUrls = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) userUrls[url] = urlDatabase[url];
+  }
+  return userUrls;
+};
+
+console.log(urlsForUser('LmjMRm'));
+
 // GET handler for the main URLs page (dynamically rendered with EJS)
 app.get('/urls', (req, res) => {
   const user = req.cookies ? users[req.cookies['user_id']] : null;
-  const templateVars = { urlDatabase, user };
+  const filteredUrlDatabase = user ? urlsForUser(user.id) : null;
+  const templateVars = { filteredUrlDatabase, user };
   res.render('urls_index', templateVars);
 });
 
