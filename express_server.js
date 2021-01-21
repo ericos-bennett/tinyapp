@@ -62,7 +62,7 @@ app.get('/urls', (req, res) => {
 // POST handler for new URL form submission
 app.post('/urls', (req, res) => {
   const randomStr = generateRandomString();
-  urlDatabase[randomStr] = req.body.longURL;
+  urlDatabase[randomStr] = { longURL: req.body.longURL, userID: null };
   res.redirect(`/urls/${randomStr}`);
 });
 
@@ -112,7 +112,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // GET handler for shortURLs (using express route parameters)
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.cookies ? users[req.cookies['user_id']] : null;
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], user };
   res.render("urls_show", templateVars);
 });
 
@@ -120,7 +120,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const newURL = req.body.newURL;
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = newURL;
+  urlDatabase[shortURL]['longURL'] = newURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -151,7 +151,7 @@ app.post('/register', (req, res) => {
 
 // GET handler for shortURL redirects
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL]['longURL'];
   res.redirect(longURL);
 });
 
