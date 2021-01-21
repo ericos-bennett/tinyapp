@@ -61,7 +61,11 @@ const urlsForUser = (id) => {
   return userUrls;
 };
 
-console.log(urlsForUser('LmjMRm'));
+/*
+//
+HANDLERS
+//
+*/
 
 // GET handler for the main URLs page (dynamically rendered with EJS)
 app.get('/urls', (req, res) => {
@@ -186,6 +190,12 @@ app.post('/register', (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]['longURL'];
   res.redirect(longURL);
+});
+
+// GET handler for all unconfigured requests
+app.get('*', (req, res) => {
+  res.statusCode = '404';
+  res.send('404 Page Not Found');
 });
 
 // Initialize listener
