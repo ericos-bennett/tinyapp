@@ -48,7 +48,7 @@ app.get('/urls', (req, res) => {
     ? helpers.getUserUrls(user.id, urlDatabase)
     : null;
   const templateVars = { filteredUrlDatabase, user };
-  res.render('urls_index', templateVars);
+  return res.render('urls_index', templateVars);
 });
 
 // GET handler for 'Create New URL' page
@@ -61,23 +61,15 @@ app.get('/urls/new', (req, res) => {
 // GET handler for the login page
 app.get('/login', (req, res) => {
   const user = userDatabase[req.session.userId];
-  if (!user) {
-    const templateVars = { user };
-    res.render('login', templateVars);
-  } else {
-    res.redirect('/urls');
-  }
+  const templateVars = { user };
+  return user ? res.redirect('/urls') : res.render('login', templateVars);
 });
 
 // GET handler for the registration page
 app.get('/register', (req, res) => {
   const user = userDatabase[req.session.userId];
-  if (!user) {
-    const templateVars = { user };
-    res.render('register', templateVars);
-  } else {
-    res.redirect('/urls');
-  }
+  const templateVars = { user };
+  return user ? res.redirect('/urls') : res.render('register', templateVars);
 });
 
 // GET handler for shortURL edit pages
@@ -91,7 +83,7 @@ app.get('/urls/:shortURL', (req, res) => {
       longURL: urlDatabase[req.params.shortURL]['longURL'],
       authorized: true,
     };
-    res.render('urls_show', templateVars);
+    return res.render('urls_show', templateVars);
   } else {
     const templateVars = {
       user: null,
@@ -99,7 +91,7 @@ app.get('/urls/:shortURL', (req, res) => {
       longURL: null,
       authorized: false
     };
-    res.render('urls_show', templateVars);
+    return res.render('urls_show', templateVars);
   }
 });
 
@@ -120,7 +112,7 @@ app.get('/u/:shortURL', (req, res) => {
 app.get('*', (req, res) => {
   const user = userDatabase[req.session.userId];
   const templateVars = { user, errorMsg: '404 Page Not Found' };
-  res.status(404).render('error_page', templateVars);
+  return res.status(404).render('error_page', templateVars);
 });
 
 // POST handler for user registrations
@@ -137,12 +129,11 @@ app.post('/register', (req, res) => {
       password: hashedPassword,
     };
     req.session.userId = newUserId;
-    res.redirect('/urls');
-    console.log(userDatabase);
+    return res.redirect('/urls');
   } else {
     const user = userDatabase[req.session.userId];
     const templateVars = { user, errorMsg: '400 Bad Request' };
-    res.status(400).render('error_page', templateVars);
+    return res.status(400).render('error_page', templateVars);
   }
 });
 
@@ -154,11 +145,11 @@ app.post('/login', (req, res) => {
   // login error handling and authorization
   if (user && bcrypt.compareSync(password, user.password)) {
     req.session.userId = user.id;
-    res.redirect('/urls');
+    return res.redirect('/urls');
   } else {
     const user = userDatabase[req.session.userId];
     const templateVars = { user, errorMsg: '403 Forbidden' };
-    res.status(403).render('error_page', templateVars);
+    return res.status(403).render('error_page', templateVars);
   }
 });
 
