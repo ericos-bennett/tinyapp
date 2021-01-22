@@ -14,12 +14,7 @@ const app = express();
 const PORT = 8080; // default port 8080 (works with vagrant rerouting)
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-  cookieSession({
-    name: 'session',
-    secret: 'this is not the secret you are looking for',
-  })
-);
+app.use(cookieSession({ name: 'session', secret: 'nalgene' }));
 app.use(methodOverride('_method'));
 app.use(morgan('dev'));
 
@@ -138,7 +133,7 @@ app.post('/login', (req, res) => {
 // POST handler for logouts
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 // POST handler for URL creations
@@ -146,30 +141,28 @@ app.post('/urls', (req, res) => {
   const user = userDatabase[req.session.userId];
   const randomStr = helpers.makeNewKey();
   urlDatabase[randomStr] = { longURL: req.body.longURL, userID: user.id };
-  res.redirect(`/urls/${randomStr}`);
+  return res.redirect(`/urls/${randomStr}`);
 });
 
-// POST hanlder for URL edits
-app.post('/urls/:shortURL', (req, res) => {
+// PUT hanlder for URL edits
+app.put('/urls/:shortURL', (req, res) => {
   const user = userDatabase[req.session.userId];
   const shortURL = req.params.shortURL;
   if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     const newURL = req.body.newURL;
     urlDatabase[shortURL]['longURL'] = newURL;
-    res.redirect(`/urls/${shortURL}`);
+    return res.redirect(`/urls/${shortURL}`);
   } else {
-    res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
+    return res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
   }
 });
 
-// POST handler for URL deletions
-app.post('/urls/:shortURL/delete', (req, res) => {
+// DELETE handler for URL deletions
+app.delete('/urls/:shortURL/delete', (req, res) => {
   const user = userDatabase[req.session.userId];
   const shortURL = req.params.shortURL;
   if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     delete urlDatabase[shortURL];
-    res.redirect('/urls');
-  } else {
-    res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
   }
+  return res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
 });
