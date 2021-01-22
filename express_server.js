@@ -61,15 +61,23 @@ app.get('/urls/new', (req, res) => {
 // GET handler for the login page
 app.get('/login', (req, res) => {
   const user = userDatabase[req.session.userId];
-  const templateVars = { user };
-  res.render('login', templateVars);
+  if (!user) {
+    const templateVars = { user };
+    res.render('login', templateVars);
+  } else {
+    res.redirect('/urls');
+  }
 });
 
 // GET handler for the registration page
 app.get('/register', (req, res) => {
   const user = userDatabase[req.session.userId];
-  const templateVars = { user };
-  res.render('register', templateVars);
+  if (!user) {
+    const templateVars = { user };
+    res.render('register', templateVars);
+  } else {
+    res.redirect('/urls');
+  }
 });
 
 // GET handler for shortURL edit pages
@@ -91,7 +99,6 @@ app.get('/urls/:shortURL', (req, res) => {
       longURL: null,
       authorized: false
     };
-    // res.render('/urls', { authorized: false }); // Give this a prompt instead of a redirect? Also clean up error pages
     res.render('urls_show', templateVars);
   }
 });
@@ -111,8 +118,9 @@ app.get('/u/:shortURL', (req, res) => {
 
 // GET handler for all unconfigured requests
 app.get('*', (req, res) => {
-  res.statusCode = '404';
-  res.send('404 Page Not Found');
+  const user = userDatabase[req.session.userId];
+  const templateVars = { user, errorMsg: '404 Page Not Found' };
+  res.status(404).render('error_page', templateVars);
 });
 
 // POST handler for user registrations
@@ -130,9 +138,11 @@ app.post('/register', (req, res) => {
     };
     req.session.userId = newUserId;
     res.redirect('/urls');
+    console.log(userDatabase);
   } else {
-    res.statusCode = '400';
-    res.send('400 Bad Request');
+    const user = userDatabase[req.session.userId];
+    const templateVars = { user, errorMsg: '400 Bad Request' };
+    res.status(400).render('error_page', templateVars);
   }
 });
 
@@ -146,8 +156,9 @@ app.post('/login', (req, res) => {
     req.session.userId = user.id;
     res.redirect('/urls');
   } else {
-    res.statusCode = '403';
-    res.send('403 Forbidden');
+    const user = userDatabase[req.session.userId];
+    const templateVars = { user, errorMsg: '403 Forbidden' };
+    res.status(403).render('error_page', templateVars);
   }
 });
 
@@ -160,9 +171,13 @@ app.post('/logout', (req, res) => {
 // POST handler for URL creations
 app.post('/urls', (req, res) => {
   const user = userDatabase[req.session.userId];
-  const randomStr = helpers.makeNewKey();
-  urlDatabase[randomStr] = { longURL: req.body.longURL, userID: user.id };
-  return res.redirect(`/urls/${randomStr}`);
+  if (user) {
+    const randomStr = helpers.makeNewKey();
+    urlDatabase[randomStr] = { longURL: req.body.longURL, userID: user.id };
+    return res.redirect(`/urls/${randomStr}`);
+  } else {
+    return res.redirect('/urls');
+  }
 });
 
 // PUT hanlder for URL edits
@@ -172,10 +187,8 @@ app.put('/urls/:shortURL', (req, res) => {
   if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     const newURL = req.body.newURL;
     urlDatabase[shortURL]['longURL'] = newURL;
-    return res.redirect(`/urls/${shortURL}`);
-  } else {
-    return res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
   }
+  return res.redirect('/urls');
 });
 
 // DELETE handler for URL deletions
@@ -185,5 +198,5 @@ app.delete('/urls/:shortURL/delete', (req, res) => {
   if (user && helpers.getUserUrls(user.id, urlDatabase)[shortURL]) {
     delete urlDatabase[shortURL];
   }
-  return res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
+  return res.redirect('/urls');
 });
