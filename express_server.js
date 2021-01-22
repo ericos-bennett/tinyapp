@@ -35,6 +35,12 @@ const userDatabase = {};
 -- ROUTE HANDLERS --
 ------------------*/
 
+// GET handler for root URL page rerouting
+app.get('/', (req, res) => {
+  const user = userDatabase[req.session.userId];
+  return user ? res.redirect('/urls') : res.redirect('/login');
+});
+
 // GET handler for the main URLs page
 app.get('/urls', (req, res) => {
   const user = userDatabase[req.session.userId];
@@ -75,17 +81,32 @@ app.get('/urls/:shortURL', (req, res) => {
       user,
       shortURL,
       longURL: urlDatabase[req.params.shortURL]['longURL'],
+      authorized: true,
     };
     res.render('urls_show', templateVars);
   } else {
-    res.redirect('/urls'); // Give this a prompt instead of a redirect? Also clean up error pages
+    const templateVars = {
+      user: null,
+      shortURL: null,
+      longURL: null,
+      authorized: false
+    };
+    // res.render('/urls', { authorized: false }); // Give this a prompt instead of a redirect? Also clean up error pages
+    res.render('urls_show', templateVars);
   }
 });
 
 // GET handler for shortURL redirects
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]['longURL'];
-  res.redirect(longURL);
+  const user = userDatabase[req.session.userId];
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    const longURL = urlDatabase[req.params.shortURL]['longURL'];
+    return res.redirect(longURL);
+  } else {
+    const templateVars = { user };
+    return res.render('u_invalid', templateVars);
+  }
 });
 
 // GET handler for all unconfigured requests
