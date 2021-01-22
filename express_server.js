@@ -5,6 +5,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override');
+const morgan = require('morgan');
 const bcrypt = require('bcrypt');
 const helpers = require('./helpers');
 
@@ -18,6 +20,8 @@ app.use(
     secret: 'this is not the secret you are looking for',
   })
 );
+app.use(methodOverride('_method'));
+app.use(morgan('dev'));
 
 app.set('view engine', 'ejs');
 
@@ -26,32 +30,11 @@ app.listen(PORT, () => {
 });
 
 /*------------------
--- TEST VARIABLES --
+-- DB VARIABLES --
 ------------------*/
 
-const urlDatabase = {
-  b2xVn2: {
-    longURL: 'http://www.lighthouselabs.ca',
-    userID: 'LmjMRm',
-  },
-  fsm5xK: {
-    longURL: 'http://www.google.com',
-    userID: 'P22Wyk',
-  },
-};
-
-const userDatabase = {
-  LmjMRm: {
-    id: 'LmjMRm',
-    email: 'user@example.com',
-    password: 'purple-monkey-dinosaur',
-  },
-  P22Wyk: {
-    id: 'P22Wyk',
-    email: 'user2@example.com',
-    password: 'dishwasher-funk',
-  },
-};
+const urlDatabase = {};
+const userDatabase = {};
 
 /*------------------
 -- ROUTE HANDLERS --
@@ -65,14 +48,13 @@ app.get('/urls', (req, res) => {
     : null;
   const templateVars = { filteredUrlDatabase, user };
   res.render('urls_index', templateVars);
-  console.log(user);
 });
 
 // GET handler for 'Create New URL' page
 app.get('/urls/new', (req, res) => {
   const user = userDatabase[req.session.userId];
   const templateVars = { user };
-  user ? res.render('urls_new', templateVars) : res.redirect('/login');
+  return user ? res.render('urls_new', templateVars) : res.redirect('/login');
 });
 
 // GET handler for the login page
